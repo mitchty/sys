@@ -10,8 +10,8 @@ task=$script
 name=$1
 name=${name:=unknown}
 
-shafile=gitsha.go
-echo "$(scripts/gitsha.sh)" > gitsha.go
+gitfile=git.go
+echo "$(scripts/git.sh)" > ${gitfile}
 
 type go > /dev/null 2>&1
 if [[ $? == 0 ]]; then
@@ -22,7 +22,9 @@ if [[ $? == 0 ]]; then
   cd ${dir}
   args=""
   if [[ $task == 'build' ]]; then
-    args="-o ${name} ${shafile} $(ls -d *.go | grep -v ${shafile})"
+    args="-o ${name} ${gitfile} $(ls -d *.go | grep -v ${gitfile})"
+  elif [[ $task == 'test' ]]; then
+    args="$(find . -name '*_test.go' -type f)"
   fi
   go ${task} ${compy} ${args}
   exit $?
