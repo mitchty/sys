@@ -11,9 +11,15 @@ import (
 Store where the release file is, if at all.
 */
 type linuxVendorReleaseFile struct {
-	vendor      string
-	releaseFile string
+	vendor, releaseFile string
 }
+
+type thisSystem struct {
+	releaseFile         string
+	releaseFileContents []string
+}
+
+var theLinuxIKnow thisSystem
 
 /*
 map of where release files per vendor type
@@ -24,19 +30,7 @@ var linuxVendorReleaseFiles = []linuxVendorReleaseFile{
 	{"redhat", "/etc/Redhat-release"},
 	{"debian", "/etc/lsb-release"},
 	{"ubuntu", "/etc/lsb-release"},
-	{"unknown_linux", "/dev/null"},
 }
-
-/* NOT YET USED
-type linuxVerInfo struct {
-	arch string
-	info verInfo
-}
-
-var linuxVerInfos = []func(){
-	{"sles", func() verInfo { return slesInfo() }},
-	{"unknown_linux", func() verInfo { return verInfo{major: "??", minor: "?"} }},
-}*/
 
 /*
 Parse out SuSE Linux Enterprise Something release files.
@@ -50,7 +44,7 @@ minor = 2
 sp 3 the same
 */
 func slesInfo() (info verInfo) {
-	for _, line := range releasefileContents() {
+	for _, line := range releaseFileContents() {
 		if strings.Contains(line, "PATCHLEVEL = ") {
 			info.minor = strings.Trim(strings.Split(line, " = ")[1], "\n")
 		}
@@ -61,8 +55,14 @@ func slesInfo() (info verInfo) {
 	return
 }
 
+/*
+Parse out Ubuntu derpitude from lsb-release.
+verInfo equates to for 12.04:
+major = 12
+minor = 04
+*/
 func ubuntuInfo() (info verInfo) {
-	for _, line := range releasefileContents() {
+	for _, line := range releaseFileContents() {
 		if strings.Contains(line, "DISTRIB_RELEASE=") {
 			all := strings.Split(line, "=")[1]
 			info.major = strings.Split(all, ".")[0]
@@ -96,6 +96,7 @@ And also have some defaults of nothing for major/minor when i've no idea what
 i'm running on.
 */
 func archInfo(arch string) (info verInfo) {
+	setupTheLinuxIKnow()
 	switch vendor() {
 	case "sles":
 		info = slesInfo()
@@ -104,6 +105,27 @@ func archInfo(arch string) (info verInfo) {
 	default:
 		info = verInfo{major: "", minor: ""}
 	}
+	return
+}
+
+/*
+Setup the struct that keeps track of the release filename
+and its contents.
+*/
+func setupTheLinuxIKnow() {
+	// filename
+	for _, i := range linuxVendorReleaseFiles {
+		if _, err := os.Stat(i.releaseFile); err == nil {
+			theLinuxIKnow.releaseFile = i.releaseFile
+		}
+	}
+	// contents
+	contents, err := ReadLines(theLinuxIKnow.releaseFile)
+	if err != nil {
+		log.Fatal(err)
+		// panic?
+	}
+	theLinuxIKnow.releaseFileContents = contents
 	return
 }
 
@@ -121,13 +143,10 @@ func releasefile() (name string) {
 }
 
 /*
-Dump the contents of the file.
+Dump the contents of the file cached in the struct.
 */
-func releasefileContents() (contents []string) {
-	contents, err := ReadLines(releasefile())
-	if err != nil {
-		log.Fatal(err)
-	}
+func releaseFileContents() (contents []string) {
+	contents = theLinuxIKnow.releaseFileContents
 	return
 }
 
@@ -138,18 +157,17 @@ Ubuntu makes this harder than it needs to be.
 */
 func vendor() (vendor string) {
 	vendor = "unknown_linux"
-	for _, i := range linuxVendorReleaseFiles {
-		if _, err := os.Stat(i.releaseFile); err == nil {
-			if i.releaseFile == "/etc/lsb-release" {
-				// sigh, fine, read the contents to find the DISTRIB_ID
-				foo, _ := ReadLines("/etc/lsb-release")
-				if strings.Contains(foo[0], "Ubuntu") {
-					vendor = "ubuntu"
-					break
-				}
+	if theLinuxIKnow.releaseFile == "/etc/lsb-release" {
+		content := releaseFileContents()
+		if strings.Contains(content[0], "Ubuntu") {
+			vendor = "ubuntu"
+		}
+	} else {
+		for _, i := range linuxVendorReleaseFiles {
+			if i.releaseFile == theLinuxIKnow.releaseFile {
+				vendor = i.releaseFile
+				break
 			}
-			vendor = i.vendor
-			break
 		}
 	}
 	return
