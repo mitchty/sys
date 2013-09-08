@@ -9,7 +9,7 @@ import (
 Stringified output like osx-10.8.4 etc...
 */
 func (i *Info) String() string {
-	return fmt.Sprintf("%s-%s.%s", i.vendor, i.major, i.minor)
+	return fmt.Sprintf("%s-%s.%s", i.Vendor, i.Major, i.Minor)
 }
 
 /*

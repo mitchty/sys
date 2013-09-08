@@ -1,12 +1,7 @@
 package sys
 
 type Uname struct {
-	release   string
-	all       string
-	machine   string
-	processor string
-	Nodename  string
-	kernel    string
+	Release, All, Machine, Processor, Nodename, Kernel string
 }
 
 /*
@@ -14,12 +9,12 @@ Return a Uname struct that makes sense for osx/darwin uname.
 */
 func NewUname() *Uname {
 	u := Uname{
-		release:   unameGet("-r"),
-		all:       unameGet("-a"),
+		Release:   unameGet("-r"),
+		All:       unameGet("-a"),
 		Nodename:  unameGet("-n"),
-		machine:   unameGet("-m"),
-		processor: unameGet("-p"),
-		kernel:    unameGet("-s"),
+		Machine:   unameGet("-m"),
+		Processor: unameGet("-p"),
+		Kernel:    unameGet("-s"),
 	}
 	return &u
 }
