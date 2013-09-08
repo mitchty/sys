@@ -15,7 +15,7 @@ type linuxVendorReleaseFile struct {
 }
 
 type thisSystem struct {
-	releaseFile         string
+	vendor, releaseFile string
 	releaseFileContents []string
 }
 
@@ -111,6 +111,8 @@ func archInfo(arch string) (info verInfo) {
 /*
 Setup the struct that keeps track of the release filename
 and its contents.
+
+Bit of a giant method, but I'll refactor later.
 */
 func setupTheLinuxIKnow() {
 	// filename
@@ -126,6 +128,21 @@ func setupTheLinuxIKnow() {
 		// panic?
 	}
 	theLinuxIKnow.releaseFileContents = contents
+	// vendor
+	theLinuxIKnow.vendor = "unknown_linux"
+	if theLinuxIKnow.releaseFile == "/etc/lsb-release" {
+		content := contents
+		if strings.Contains(content[0], "Ubuntu") {
+			theLinuxIKnow.vendor = "ubuntu"
+		}
+	} else {
+		for _, i := range linuxVendorReleaseFiles {
+			if i.releaseFile == theLinuxIKnow.releaseFile {
+				theLinuxIKnow.vendor = i.releaseFile
+				break
+			}
+		}
+	}
 	return
 }
 
@@ -151,24 +168,9 @@ func releaseFileContents() (contents []string) {
 }
 
 /*
-What vendor of linux are we running.
-
-Ubuntu makes this harder than it needs to be.
+What vendor of linux are we running from the cached struct.
 */
 func vendor() (vendor string) {
-	vendor = "unknown_linux"
-	if theLinuxIKnow.releaseFile == "/etc/lsb-release" {
-		content := releaseFileContents()
-		if strings.Contains(content[0], "Ubuntu") {
-			vendor = "ubuntu"
-		}
-	} else {
-		for _, i := range linuxVendorReleaseFiles {
-			if i.releaseFile == theLinuxIKnow.releaseFile {
-				vendor = i.releaseFile
-				break
-			}
-		}
-	}
+	vendor = theLinuxIKnow.vendor
 	return
 }
