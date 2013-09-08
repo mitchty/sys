@@ -2,7 +2,7 @@ package sys
 
 import (
 	"fmt"
-	"github.com/mitchty/sys/sys"
+	"github.com/mitchty/sys"
 	"os"
 	"testing"
 )

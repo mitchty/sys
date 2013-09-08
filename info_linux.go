@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"strings"
 )
 
@@ -69,9 +68,9 @@ sles${major}u${minor}
 func (i *Info) String() string {
 	switch vendor() {
 	case "sles":
-		return fmt.Sprintf("%s%su%s", i.vendor, i.major, i.minor)
+		return fmt.Sprintf("%s%su%s", i.Vendor, i.Major, i.Minor)
 	default:
-		return fmt.Sprintf("%s%s%s", i.vendor, i.major, i.minor)
+		return fmt.Sprintf("%s%s%s", i.Vendor, i.Major, i.Minor)
 	}
 }
 
@@ -108,7 +107,7 @@ func releasefile() (name string) {
 Dump the contents of the file.
 */
 func releasefileContents() (contents []string) {
-	contents, err := sys.ReadLines(releasefile())
+	contents, err := ReadLines(releasefile())
 	if err != nil {
 		log.Fatal(err)
 	}
