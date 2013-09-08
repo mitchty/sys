@@ -1,3 +1,4 @@
-git.go
-sys/sandbox
+git/git.go
+.vagrant
+sandbox
 unknown

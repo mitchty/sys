@@ -22,6 +22,8 @@ var linuxVendorReleaseFiles = []linuxVendorReleaseFile{
 	{"sles", "/etc/SuSE-release"},
 	{"arch", "/etc/arch-release"},
 	{"redhat", "/etc/Redhat-release"},
+	{"debian", "/etc/lsb-release"},
+	{"ubuntu", "/etc/lsb-release"},
 	{"unknown_linux", "/dev/null"},
 }
 
@@ -59,6 +61,17 @@ func slesInfo() (info verInfo) {
 	return
 }
 
+func ubuntuInfo() (info verInfo) {
+	for _, line := range releasefileContents() {
+		if strings.Contains(line, "DISTRIB_RELEASE=") {
+			all := strings.Split(line, "=")[1]
+			info.major = strings.Split(all, ".")[0]
+			info.minor = strings.Trim(strings.Split(all, ".")[1], "\n")
+		}
+	}
+	return
+}
+
 /*
 Stringify the output as vendor/major/minor
 
@@ -69,6 +82,8 @@ func (i *Info) String() string {
 	switch vendor() {
 	case "sles":
 		return fmt.Sprintf("%s%su%s", i.Vendor, i.Major, i.Minor)
+	case "ubuntu":
+		return fmt.Sprintf("%s-%s.%s", i.Vendor, i.Major, i.Minor)
 	default:
 		return fmt.Sprintf("%s%s%s", i.Vendor, i.Major, i.Minor)
 	}
@@ -84,6 +99,8 @@ func archInfo(arch string) (info verInfo) {
 	switch vendor() {
 	case "sles":
 		info = slesInfo()
+	case "ubuntu":
+		info = ubuntuInfo()
 	default:
 		info = verInfo{major: "", minor: ""}
 	}
@@ -116,11 +133,21 @@ func releasefileContents() (contents []string) {
 
 /*
 What vendor of linux are we running.
+
+Ubuntu makes this harder than it needs to be.
 */
 func vendor() (vendor string) {
 	vendor = "unknown_linux"
 	for _, i := range linuxVendorReleaseFiles {
 		if _, err := os.Stat(i.releaseFile); err == nil {
+			if i.releaseFile == "/etc/lsb-release" {
+				// sigh, fine, read the contents to find the DISTRIB_ID
+				foo, _ := ReadLines("/etc/lsb-release")
+				if strings.Contains(foo[0], "Ubuntu") {
+					vendor = "ubuntu"
+					break
+				}
+			}
 			vendor = i.vendor
 			break
 		}
