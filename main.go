@@ -8,5 +8,4 @@ import (
 func main() {
 	test := sys.NewInfo()
 	fmt.Println(test)
-	fmt.Printf("buildinfo: %s %s %s\n", GitHash, GitTag, GitBuildDate)
 }
