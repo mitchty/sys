@@ -150,12 +150,7 @@ func setupTheLinuxIKnow() {
 Where's our release file?
 */
 func releasefile() (name string) {
-	for _, i := range linuxVendorReleaseFiles {
-		if vendor() == i.vendor {
-			name = i.releaseFile
-			break
-		}
-	}
+	name = theLinuxIKnow.releaseFile
 	return
 }
 
