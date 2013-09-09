@@ -3,7 +3,7 @@
 script=$(basename $0)
 dir=$(cd $(dirname $0); pwd)
 iam=${dir}/${script}
-gccgo=yes # if anything else, will not use gccgo even if present
+gccgo=${gccgo:=yes} # if anything else, will not use gccgo even if present
 
 PATH=${PATH}:${dir}
 task=$script
@@ -15,20 +15,24 @@ echo "$(scripts/git.sh)" > ${gitfile}
 
 type go > /dev/null 2>&1
 if [[ $? == 0 ]]; then
-  compy= # use gccgo to compile if its present, cause faster runtime
+  usegccgo= # use gccgo to compile if its present, cause faster runtime
   type gccgo > /dev/null 2>&1
-  [[ $gccgo != 'yes' && $? == 0 ]] && compy='--compiler=gccgo'
-
+  [[ $gccgo == 'yes' && $? == 0 ]] && usegccgo=yes
+  
   cd ${dir}
   args=""
   if [[ $task == 'build' ]]; then
     cd main
-#    args="-o ${name} ${gitfile} $(ls -d *.go | grep -v ${gitfile})"
     args="-o ${dir}/${name}"
   elif [[ $task == 'test' ]]; then
     args="$(find . -name '*_test.go' -type f)"
   fi
-  go ${task} ${compy} ${args}
+
+  if [[ $usegccgo == 'yes' ]]; then
+    go ${task} --compiler=gccgo --gccgoflags "--static -O4" ${args}
+  else
+    go ${task} ${args}
+  fi
   cd ${dir}/..
   exit $?
 fi
