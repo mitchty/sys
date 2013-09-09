@@ -138,7 +138,7 @@ func setupTheLinuxIKnow() {
 	} else {
 		for _, i := range linuxVendorReleaseFiles {
 			if i.releaseFile == theLinuxIKnow.releaseFile {
-				theLinuxIKnow.vendor = i.releaseFile
+				theLinuxIKnow.vendor = i.vendor
 				break
 			}
 		}
