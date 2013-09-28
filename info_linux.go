@@ -65,8 +65,9 @@ func ubuntuInfo() (info verInfo) {
 	for _, line := range releaseFileContents() {
 		if strings.Contains(line, "DISTRIB_RELEASE=") {
 			all := strings.Split(line, "=")[1]
-			info.major = strings.Split(all, ".")[0]
-			info.minor = strings.Trim(strings.Split(all, ".")[1], "\n")
+			all = strings.Trim(all, "\n")
+			ver := strings.Split(all, ".")
+			info.major, info.minor = ver[0], ver[1]
 		}
 	}
 	return
